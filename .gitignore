@@ -1,0 +1,50 @@
+# Secrets
+.env
+
+# Local persisted volumes
+minio-data/
+pg-data/
+airflow-pg-data/
+warehouse-data/
+metabase-data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Airflow
+airflow/logs/
+airflow/plugins/__pycache__/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Terraform and isolated checks
+**/*.tfstate*
+**/*.tfvars
+**/*.tfplan
+**/.terraform/
+.env.*
+.terraform-schema.json
+.audit-test/
+.azure-deploy/
+**/backend.hcl
+
+# Test outputs, exports and private keys
+.pytest_cache/
+.coverage
+htmlcov/
+dbt/.user.yml
+exports/
+*.pem
+*.key
+crash.log
