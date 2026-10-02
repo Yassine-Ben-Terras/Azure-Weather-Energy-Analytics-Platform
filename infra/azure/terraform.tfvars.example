@@ -1,0 +1,8 @@
+project_prefix       = "ewplat"
+location             = "switzerlandnorth"
+environment          = "dev"
+stage                = "foundation"
+image_tag            = "unpublished"
+airflow_admin_email  = "replace@example.com"
+alert_email          = "replace@example.com"
+# Supply entsoe_api_token using TF_VAR_entsoe_api_token; it still enters encrypted remote state.

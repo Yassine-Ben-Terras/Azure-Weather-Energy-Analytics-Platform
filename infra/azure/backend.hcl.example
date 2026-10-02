@@ -1,0 +1,5 @@
+resource_group_name  = "REPLACE-state-rg"
+storage_account_name = "REPLACE"
+container_name       = "tfstate"
+key                  = "weather-energy/aca/switzerlandnorth/dev.tfstate"
+use_azuread_auth     = true
