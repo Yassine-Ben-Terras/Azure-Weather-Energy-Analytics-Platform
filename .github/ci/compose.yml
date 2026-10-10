@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:16@sha256:f1c3376c26f2609ab9f29f71f824103fe2fcd8ee0346485cb6122a4f93df6f94
+    environment:
+      POSTGRES_USER: platform_admin
+      POSTGRES_PASSWORD: ci_admin
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform_admin -d postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    tmpfs: ["/var/lib/postgresql/data"]
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.33.0
+    command: azurite-blob --blobHost 0.0.0.0 --location /data --disableProductStyleUrl
+    environment:
+      AZURITE_ACCOUNTS: "localstorage:Y2ktb25seS1ub3QtYS1yZWFsLXNlY3JldC1hY2NvdW50LWtleQ=="
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:10000/localstorage', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 2s
+      retries: 30
+  tests:
+    image: weather-energy-airflow:audit-test
+    entrypoint: ["python", "/opt/project/scripts/container_entrypoint.py", "bash", "/workspace/.github/ci/run.sh"]
+    working_dir: /workspace
+    volumes: ["../../:/workspace:ro"]
+    environment: &test-env
+      PYTHONPATH: /workspace
+      AIRFLOW_HOME: /tmp/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW_DB_HOST: postgres
+      AIRFLOW_DB_DB: airflow
+      AIRFLOW_DB_USER: airflow
+      AIRFLOW_DB_PASSWORD: ci_airflow
+      AIRFLOW_DB_SSLMODE: disable
+      ADMIN_HOST: postgres
+      ADMIN_DB: postgres
+      ADMIN_USER: platform_admin
+      ADMIN_PASSWORD: ci_admin
+      ADMIN_SSLMODE: disable
+      WAREHOUSE_HOST: postgres
+      WAREHOUSE_PORT: "5432"
+      WAREHOUSE_DB: energy_weather
+      WAREHOUSE_USER: pipeline
+      WAREHOUSE_PASSWORD: "ci:@/# pipeline"
+      WAREHOUSE_SSLMODE: disable
+      METABASE_DB_PASSWORD: ci_metabase
+      API_DB_PASSWORD: ci_api
+      BI_DB_PASSWORD: ci_bi
+      AIRFLOW_ADMIN_EMAIL: ci@example.invalid
+      AIRFLOW_ADMIN_PASSWORD: ci_admin_ui
+      API_AUTH_TOKEN: ci_api_token
+      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=localstorage;AccountKey=Y2ktb25seS1ub3QtYS1yZWFsLXNlY3JldC1hY2NvdW50LWtleQ==;BlobEndpoint=http://azurite:10000/localstorage;"
+      AZURE_STORAGE_CONTAINER: raw-data
+    depends_on:
+      postgres: { condition: service_healthy }
+      azurite: { condition: service_healthy }
+  api-tests:
+    image: weather-energy-api:audit-test
+    working_dir: /workspace
+    entrypoint: ["python", "-m", "unittest", "discover", "-s", "tests", "-p", "test_api.py", "-v"]
+    volumes: ["../../:/workspace:ro"]
+    environment:
+      <<: *test-env
+      WAREHOUSE_USER: api_reader
+      WAREHOUSE_PASSWORD: ci_api

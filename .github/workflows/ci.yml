@@ -1,0 +1,34 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Airflow and API images
+        run: |
+          docker build -t weather-energy-airflow:audit-test -f airflow/Dockerfile .
+          docker build -t weather-energy-api:audit-test -f api/Dockerfile .
+      - name: Isolated PostgreSQL / Blob / bootstrap / dbt / DAG regression suite
+        run: |
+          docker compose --env-file .github/ci/ci.env -p weather-energy-ci -f .github/ci/compose.yml run --rm tests
+          docker compose --env-file .github/ci/ci.env -p weather-energy-ci -f .github/ci/compose.yml run --rm --no-deps api-tests
+      - name: Remove only CI containers
+        if: always()
+        run: docker compose --env-file .github/ci/ci.env -p weather-energy-ci -f .github/ci/compose.yml down --volumes
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - run: terraform fmt -check infra/azure
+      - run: terraform -chdir=infra/azure init -backend=false -lockfile=readonly
+      - run: terraform -chdir=infra/azure validate
+      - run: terraform -chdir=infra/azure test
