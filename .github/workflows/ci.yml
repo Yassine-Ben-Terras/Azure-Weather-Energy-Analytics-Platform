@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Test deployment safety controls
+        run: python -m unittest discover -s tests -p test_deploy_release.py -v
       - name: Build Airflow and API images
         run: |
           docker build -t weather-energy-airflow:audit-test -f airflow/Dockerfile .

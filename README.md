@@ -80,6 +80,13 @@ Do not initialize a new state or apply example values over an existing environme
 Private application URLs require a network path to the VNet; the Azure portal does
 not provide a browser-network bypass.
 
+## Delivery
+
+The [CD workflow](docs/continuous-delivery.md) publishes digest-pinned images to ACR
+and updates existing Container Apps after successful CI and an operator-confirmed
+Airflow maintenance window. One-time Azure OIDC and GitHub environment configuration
+is required before activation.
+
 ## Validate
 
 GitHub Actions runs image builds, integration tests and mocked Terraform plans.

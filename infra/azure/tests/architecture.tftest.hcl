@@ -76,3 +76,19 @@ run "applications" {
     error_message = "The monitor must not depend on an Airflow metadata database."
   }
 }
+
+run "github_cd" {
+  command = plan
+  variables {
+    stage = "apps"
+    github_repository = "example/weatherenergy"
+  }
+  assert {
+    condition = azurerm_federated_identity_credential.github_cd[0].subject == "repo:example/weatherenergy:environment:azure-production"
+    error_message = "CD trust must be limited to the selected repository and environment."
+  }
+  assert {
+    condition = length(azurerm_role_assignment.github_cd_apps) == 3 && length(azurerm_role_assignment.github_cd_jobs) == 2
+    error_message = "CD write grants must be scoped to the three apps and two jobs."
+  }
+}

@@ -105,3 +105,9 @@ Mocks validate configuration logic, not subscription capacity or network access.
 Storage and databases have `prevent_destroy`. For a deliberate teardown, back up data,
 review retention obligations, adjust protection only for the retired deployment and
 inspect its destruction plan. Preserve any backend still used by another deployment.
+
+## Application releases
+
+After initial provisioning, CD owns workload image versions; Terraform ignores that
+single image field to prevent reverting releases. See the [CD activation guide](../../docs/continuous-delivery.md)
+for the optional OIDC identity, scoped roles and operational prerequisites.

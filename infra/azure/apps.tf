@@ -229,6 +229,8 @@ resource "azurerm_container_app" "app" {
   }
   depends_on = [azurerm_role_assignment.pull, azurerm_role_assignment.secret, azurerm_role_assignment.bronze, azurerm_role_assignment.logs, azurerm_postgresql_flexible_server_configuration.extensions]
   lifecycle {
+    # CD owns image releases after Terraform creates the workload.
+    ignore_changes = [template[0].container[0].image]
     precondition {
       condition     = var.image_tag != "unpublished"
       error_message = "Publish both images and set their immutable image_tag first."
@@ -300,6 +302,8 @@ resource "azurerm_container_app_job" "job" {
   }
   depends_on = [azurerm_role_assignment.secret, azurerm_role_assignment.pull, azurerm_postgresql_flexible_server_database.db]
   lifecycle {
+    # CD owns image releases after Terraform creates the workload.
+    ignore_changes = [template[0].container[0].image]
     precondition {
       condition     = var.image_tag != "unpublished"
       error_message = "Publish the Airflow image before provisioning the bootstrap job."

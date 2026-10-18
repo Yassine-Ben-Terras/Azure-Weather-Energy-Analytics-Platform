@@ -26,3 +26,17 @@ The former AKS manifests, local deployment entrypoint and optional administratio
 VM source have been removed. Historical reports and graphics are retained only in
 an ignored local archive. Operational deployment directories and private recovery
 files remain excluded from Git. No Azure resources were changed during this cleanup.
+
+## CD checks — 18 October 2026
+
+- Four deployment safety tests passed: reject mutable image tags, reject unhealthy
+  revisions, block active job executions before updates, and retain recovery images
+  after a failed rollout.
+- Terraform validation and four mocked plans passed, including optional OIDC trust
+  and resource-scoped permissions for GitHub CD.
+- Both workflow YAML files parsed successfully; Terraform formatting and Git
+  whitespace checks passed.
+
+These checks did not exercise live OIDC authentication or deploy a release on Azure.
+The GitHub environment and Azure federation must be configured before the first
+manually dispatched CD run.

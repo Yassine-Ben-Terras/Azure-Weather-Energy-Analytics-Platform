@@ -48,3 +48,5 @@ exports/
 *.pem
 *.key
 crash.log
+
+release-record.json
