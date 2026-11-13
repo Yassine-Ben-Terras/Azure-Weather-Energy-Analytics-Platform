@@ -29,7 +29,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.9.8
+          terraform_version: 1.15.8
+          terraform_wrapper: false
       - run: terraform fmt -check infra/azure
       - run: terraform -chdir=infra/azure init -backend=false -lockfile=readonly
       - run: terraform -chdir=infra/azure validate
