@@ -1,8 +1,13 @@
 # Cloud architecture
 
+The original private deployment is described below. The new deployment variant is
+documented in [infra/azure-public](../infra/azure-public/README.md): no customer VNet,
+an explicit PostgreSQL IP allowlist, optional UI IP restrictions, and direct Power BI Desktop access using
+the read-only `bi_reader` role over TLS. The two variants use separate Terraform states.
+
 ## Runtime
 
-The only deployment implementation is Terraform in `infra/azure`, targeting
+The original deployment implementation is Terraform in `infra/azure`, targeting
 Switzerland North by default. There is no AKS cluster, Kubernetes manifest or
 on-premises deployment requirement.
 

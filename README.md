@@ -20,19 +20,22 @@ flowchart LR
   D --> F[Gradient boosting estimates]
   F --> R[PostgreSQL: forecasts and comparisons]
   R --> API[FastAPI on Container Apps]
-  D --> X[Reporting exports]
-  R --> X
-  X --> BI[Power BI]
+  D --> BI[Power BI Desktop: PostgreSQL connector]
+  R --> BI
 ```
 
-The deployed application region is **Switzerland North**. Airflow scheduler,
-webserver and FastAPI run in a private Container Apps environment. Container Apps
+The application region is **Switzerland North**. In the new public-access variant,
+Airflow scheduler, webserver and FastAPI run on Container Apps without a customer VNet. Container Apps
 Jobs handle bootstrap and monitoring. Key Vault stores secrets; managed identities
 provide scoped service access. Terraform manages the infrastructure.
 
-Power BI currently consumes exported datasets. A direct, private Power BI connection
-is not provisioned by this repository. See [architecture](docs/architecture.md) for
-network boundaries and the difference between the current deployment and the target diagram.
+Power BI Desktop connects directly to PostgreSQL through an exact client-IP firewall
+rule, using TLS and a read-only database account. Airflow and API HTTPS endpoints
+require login and an API key respectively. Optional operator-IP restrictions can
+be kept enabled or disabled for changing client networks. Blob, Key Vault and ACR use authenticated
+public endpoints with managed identities. See the [public access guide](infra/azure-public/README.md)
+for the outbound-IP maintenance requirement and costs. The original private deployment
+and CSV reporting approach remain documented separately in [architecture](docs/architecture.md).
 
 ## Pipeline and reliability
 
@@ -45,6 +48,20 @@ network boundaries and the difference between the current deployment and the tar
 ETags, load receipts and PostgreSQL transactions make retries safe. An advisory lock
 protects concurrent loads. Airflow limits the DAG to one active run. Missing generation
 observations remain null rather than being silently converted to zero.
+An explicit ENTSO-E "no matching data" response for optional day-ahead prices is
+logged without deleting previously loaded prices or their load receipt. Later valid
+publications are loaded normally. Invalid responses and missing required load,
+generation or weather observations still fail validation.
+Explicit ENTSO-E load/generation publication gaps also preserve the existing rows and
+receipt. The following freshness task still rejects missing or stale load/generation
+(24 hours by default); an unavailable daily publication is never converted to zero.
+Missing or stale day-ahead prices produce a freshness warning instead of blocking
+the demand, wind and solar forecasts; required-source freshness remains enforced.
+
+Freshness currently gates the entire DAG: stale required observations in one country
+block transformations and forecasts for all three countries. Per-country isolation
+is a planned improvement, not implemented behavior. A successful ingestion task
+does not guarantee fresh observations or a populated forecast table.
 
 ## Forecast scope
 
@@ -66,10 +83,17 @@ are required before operational forecasting use.
 | `platform_common/` | Shared database connections and migrations |
 | `scripts/` | Bootstrap, monitoring, container entrypoint and deployment preparation |
 | `infra/azure/` | Cloud infrastructure and mocked Terraform tests |
+| `infra/azure-public/` | Separate public-access deployment with direct Power BI Desktop connectivity |
 | `.github/ci/`, `tests/` | Isolated regression tests; no production deployment |
 | `docs/` | Architecture, operations and project limitations |
 
 ## Deploy
+
+For the new subscription with Power BI Desktop connecting directly to PostgreSQL,
+use the separate [public access deployment](infra/azure-public/README.md). This
+variant uses explicit IPv4 firewall rules, TLS and a read-only BI role, without a
+customer VNet. It has its own backend and does not replace the old deployment state.
+The original private deployment guide remains available below.
 
 Follow the [Azure deployment guide](infra/azure/README.md). It covers remote state,
 foundation, image publication, bootstrap and application deployment. Azure resources
