@@ -134,7 +134,8 @@ class ConfigurationTests(unittest.TestCase):
             )
             with self.assertLogs(quality.logger, level="WARNING") as logs:
                 quality.check_freshness(end.isoformat())
-            self.assertEqual(len(logs.records), 3)
+            from platform_common.zones import ZONES
+            self.assertEqual(len(logs.records), len(ZONES))
 
     def test_missing_required_sources_still_fail_freshness(self):
         from ingestion import quality

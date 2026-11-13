@@ -1,0 +1,52 @@
+{
+  "FR": {
+    "entsoe_eic": "10YFR-RTE------C",
+    "latitude": 48.8566,
+    "longitude": 2.3522
+  },
+  "DE": {
+    "entsoe_eic": "10Y1001A1001A82H",
+    "latitude": 51.1657,
+    "longitude": 10.4515
+  },
+  "ES": {
+    "entsoe_eic": "10YES-REE------0",
+    "latitude": 40.4168,
+    "longitude": -3.7038
+  },
+  "NL": {
+    "entsoe_eic": "10YNL----------L",
+    "latitude": 52.3676,
+    "longitude": 4.9041
+  },
+  "BE": {
+    "entsoe_eic": "10YBE----------2",
+    "latitude": 50.8503,
+    "longitude": 4.3517
+  },
+  "AT": {
+    "entsoe_eic": "10YAT-APG------L",
+    "latitude": 48.2082,
+    "longitude": 16.3738
+  },
+  "PL": {
+    "entsoe_eic": "10YPL-AREA-----S",
+    "latitude": 52.2297,
+    "longitude": 21.0122
+  },
+  "PT": {
+    "entsoe_eic": "10YPT-REN------W",
+    "latitude": 38.7223,
+    "longitude": -9.1393
+  },
+  "CH": {
+    "entsoe_eic": "10YCH-SWISSGRIDZ",
+    "latitude": 46.948,
+    "longitude": 7.4474
+  },
+  "CZ": {
+    "entsoe_eic": "10YCZ-CEPS-----N",
+    "latitude": 50.0755,
+    "longitude": 14.4378
+  }
+}

@@ -39,9 +39,9 @@ with engine.begin() as conn:
         FROM unnest(ARRAY['FR','DE','ES']) zone
         CROSS JOIN generate_series('2026-02-01'::timestamptz, '2026-02-08'::timestamptz, interval '1 hour') ts
     """))
-check_freshness("2026-02-08T00:00:00+00:00")
+check_freshness("2026-02-08T00:00:00+00:00", zones=("FR", "DE", "ES"))
 try:
-    check_freshness("2026-03-01T00:00:00+00:00")
+    check_freshness("2026-03-01T00:00:00+00:00", zones=("FR", "DE", "ES"))
 except ValueError:
     pass
 else:
@@ -74,3 +74,16 @@ with engine.connect() as conn:
     assert all(r["ts"].isoformat() == "2026-02-08T00:00:00+00:00" for r in rows), rows
     assert all(r["predicted_value"] is not None for r in rows), rows
 print("Forecast integration passed: nine zone/target predictions, repeat run is idempotent")
+with engine.begin() as conn:
+    conn.execute(text("""
+        INSERT INTO marts.fct_demand_weather (row_key, zone, ts, load_mw, wind_mw, solar_mw)
+        SELECT zone || '_evaluation_fixture', zone, '2026-02-08T00:00:00Z', 1000, 300, 200
+        FROM (VALUES ('FR'), ('DE'), ('ES')) AS zones(zone)
+    """))
+subprocess.run(["dbt", "build", "--project-dir", "/tmp/dbt-ci", "--profiles-dir", "/tmp/dbt-ci",
+                "--select", "forecasts_vs_actuals+"], check=True)
+with engine.connect() as conn:
+    for mart in ("daily_energy_balance", "hourly_generation_by_type",
+                 "daily_forecast_performance", "source_coverage"):
+        zones = set(conn.execute(text(f"SELECT DISTINCT zone FROM marts.{mart}")).scalars())
+        assert zones == {"FR", "DE", "ES"}, (mart, zones)

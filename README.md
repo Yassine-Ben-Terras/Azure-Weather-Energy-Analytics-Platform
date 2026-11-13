@@ -62,6 +62,21 @@ Freshness gates forecasts independently for each country. A stale required sourc
 skips that country's forecast and logs a warning. The next hourly run checks again.
 Shared dbt models retain historical observations for reporting.
 
+The [zone configuration](platform_common/zones.json) defines the ten areas used by
+Airflow, freshness checks and monitoring. To add an area, specify its output code,
+ENTSO-E area EIC and one representative Open-Meteo point, then rebuild the Airflow
+image. `DE` retains the existing Germany–Luxembourg bidding zone. Verify source
+coverage and hourly run duration before rolling out additional areas.
+
+Gold marts derive zone membership from loaded observations and forecasts. Adding a
+zone requires no SQL change. Removing a zone stops its scheduled collection and
+forecasts while retaining its history in Gold. For Power BI, `daily_energy_balance`
+reports observed MWh and coverage hours by UTC day, `hourly_generation_by_type`
+exposes the ENTSO-E production categories, `daily_forecast_performance` summarizes
+resolved forecasts, and `source_coverage` reports missing hours in the last 24
+completed hours. An area with no observations yet is reported by monitoring and
+has no Gold rows. Daily energy totals can be partial when hours are missing.
+
 ## Forecast scope
 
 The model is a baseline with a target one hour after the latest usable observation.

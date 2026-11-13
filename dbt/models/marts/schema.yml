@@ -29,3 +29,15 @@ models:
         tests: [not_null]
       - name: actual_value
         tests: [not_null]
+
+  - name: daily_energy_balance
+    description: "Observed energy, peak load and hourly coverage per zone and UTC day. Totals may be partial."
+
+  - name: hourly_generation_by_type
+    description: "Observed generation in MW per zone, hour and ENTSO-E production type."
+
+  - name: daily_forecast_performance
+    description: "MAE, signed bias and evaluation count per zone, UTC target day, target and model version."
+
+  - name: source_coverage
+    description: "Latest available observation and coverage of the last 24 completed hours per observed zone and source."

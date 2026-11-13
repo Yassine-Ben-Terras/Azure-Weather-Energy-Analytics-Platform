@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from sqlalchemy import text
 from platform_common.database import warehouse_engine
 
+from platform_common.zones import ZONES
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,11 +14,11 @@ class StaleSourceError(ValueError):
     """Required source data is stale or missing."""
 
 
-def check_freshness(interval_end, zones=("FR", "DE", "ES")):
+def check_freshness(interval_end, zones=None):
     end = datetime.fromisoformat(interval_end)
     cutoff = end - timedelta(hours=int(os.getenv("MAX_SOURCE_AGE_HOURS", "24")))
     with warehouse_engine().connect() as conn:
-        for zone in zones:
+        for zone in ZONES if zones is None else zones:
             for kind in ("load", "generation", "day_ahead_price"):
                 last = conn.execute(text("""
                     SELECT max(period_start + (position - 1) * resolution_minutes * interval '1 minute')
