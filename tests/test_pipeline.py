@@ -3,8 +3,8 @@ import os
 import unittest
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
-from unittest.mock import patch
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 from azure.core.exceptions import ResourceModifiedError
@@ -31,6 +31,7 @@ class BlobTransactionTests(unittest.TestCase):
         self.client.delete_blob(self.name)
         with self.engine.begin() as conn:
             conn.execute(text("DELETE FROM raw.openmeteo_raw WHERE source_blob=:name"), {"name": self.name})
+            conn.execute(text("DELETE FROM raw.entsoe_raw WHERE source_blob=:name"), {"name": self.name})
             conn.execute(text("DELETE FROM raw.ingestion_objects WHERE name=:name"), {"name": self.name})
 
     def upload(self, temperature):
@@ -92,8 +93,91 @@ class BlobTransactionTests(unittest.TestCase):
                 future.result(timeout=30)
         self.assertEqual(self.values(), [7])
 
+    def test_unavailable_price_preserves_rows_then_accepts_republication(self):
+        self.name = f"entsoe/ES/{uuid.uuid4()}/day_ahead_price_20400101T0000_20400102T0000.xml"
+
+        def publish(content):
+            self.client.upload_blob(self.name, content, overwrite=True)
+            return self.client.get_blob_client(self.name).get_blob_properties()
+
+        def price_xml(value):
+            return (f"<Publication_MarketDocument><TimeSeries><Period><timeInterval>"
+                    f"<start>2040-01-01T00:00Z</start></timeInterval><resolution>PT1H</resolution>"
+                    f"<Point><position>1</position><price.amount>{value}</price.amount></Point>"
+                    f"</Period></TimeSeries></Publication_MarketDocument>").encode()
+
+        original = publish(price_xml(100))
+        self.assertTrue(self.load(original))
+        missing = publish(b'<Acknowledgement_MarketDocument xmlns="urn:test"><Reason>'
+                          b'<code>999</code><text>No matching data found for Data item ENERGY_PRICES</text>'
+                          b'</Reason></Acknowledgement_MarketDocument>')
+        self.assertFalse(self.load(missing))
+        with self.engine.connect() as conn:
+            self.assertEqual(conn.execute(text("SELECT price FROM raw.entsoe_raw WHERE source_blob=:n"),
+                                          {"n": self.name}).scalars().all(), [100])
+            self.assertEqual(conn.execute(text("SELECT etag FROM raw.ingestion_objects WHERE name=:n"),
+                                          {"n": self.name}).scalar(), original.etag)
+        self.assertTrue(self.load(publish(price_xml(120))))
+        with self.engine.connect() as conn:
+            self.assertEqual(conn.execute(text("SELECT price FROM raw.entsoe_raw WHERE source_blob=:n"),
+                                          {"n": self.name}).scalars().all(), [120])
+
 
 class ConfigurationTests(unittest.TestCase):
+    def test_optional_prices_do_not_block_required_source_freshness(self):
+        from ingestion import quality
+        end = datetime(2040, 1, 2, tzinfo=timezone.utc)
+        with patch.object(quality, "warehouse_engine") as engine:
+            conn = engine.return_value.connect.return_value.__enter__.return_value
+            conn.execute.side_effect = lambda statement, params: MagicMock(
+                scalar=lambda: None if params.get("kind") == "day_ahead_price" else end
+            )
+            with self.assertLogs(quality.logger, level="WARNING") as logs:
+                quality.check_freshness(end.isoformat())
+            self.assertEqual(len(logs.records), 3)
+
+    def test_missing_required_sources_still_fail_freshness(self):
+        from ingestion import quality
+        end = datetime(2040, 1, 2, tzinfo=timezone.utc)
+        for missing in ("load", "generation", "weather"):
+            with self.subTest(missing=missing), patch.object(quality, "warehouse_engine") as engine:
+                conn = engine.return_value.connect.return_value.__enter__.return_value
+                conn.execute.side_effect = lambda statement, params: MagicMock(
+                    scalar=lambda: None if params.get("kind", "weather") == missing else end
+                )
+                with self.assertRaisesRegex(ValueError, "Stale or missing"):
+                    quality.check_freshness(end.isoformat())
+
+    def test_only_explicit_known_publication_gaps_are_recognized(self):
+        acknowledgement = (b'<Acknowledgement_MarketDocument><Reason><code>999</code>'
+                           b'<text>No matching data found for Data item ENERGY_PRICES</text>'
+                           b'</Reason></Acknowledgement_MarketDocument>')
+        self.assertTrue(loader._unavailable_entsoe_document(acknowledgement, "day_ahead_price"))
+        for kind in ("load", "generation"):
+            self.assertFalse(loader._unavailable_entsoe_document(acknowledgement, kind))
+        generation = acknowledgement.replace(b"ENERGY_PRICES", b"AGGREGATED_GENERATION_PER_TYPE_R3")
+        self.assertTrue(loader._unavailable_entsoe_document(generation, "generation"))
+        self.assertFalse(loader._unavailable_entsoe_document(generation, "day_ahead_price"))
+        demand = acknowledgement.replace(b"ENERGY_PRICES", b"ACTUAL_TOTAL_LOAD_R3")
+        self.assertTrue(loader._unavailable_entsoe_document(demand, "load"))
+        self.assertFalse(loader._unavailable_entsoe_document(demand, "generation"))
+        self.assertFalse(loader._unavailable_entsoe_document(
+            acknowledgement.replace(b"No matching data found for Data item ENERGY_PRICES", b"Invalid security token"),
+            "day_ahead_price"))
+        self.assertFalse(loader._unavailable_entsoe_document(b"<Acknowledgement_MarketDocument/>", "day_ahead_price"))
+
+    def test_stale_required_sources_still_block_forecasting(self):
+        from ingestion import quality
+        end = datetime(2040, 1, 2, tzinfo=timezone.utc)
+        for stale in ("load", "generation", "weather"):
+            with self.subTest(stale=stale), patch.object(quality, "warehouse_engine") as engine:
+                conn = engine.return_value.connect.return_value.__enter__.return_value
+                conn.execute.side_effect = lambda statement, params: MagicMock(
+                    scalar=lambda: end - timedelta(hours=25 if params.get("kind", "weather") == stale else 1)
+                )
+                with self.assertRaisesRegex(ValueError, "Stale or missing " + stale):
+                    quality.check_freshness(end.isoformat())
+
     def test_invalid_response_cannot_erase_previous_data(self):
         with self.assertRaises(ValueError):
             loader._parse_entsoe_xml(b"<Acknowledgement_MarketDocument/>", "load", "FR")

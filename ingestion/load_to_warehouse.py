@@ -4,6 +4,7 @@ Changed versions replace their own raw rows; a crash rolls both changes back.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -26,6 +27,29 @@ _DOC_KIND_SUFFIX_RE = re.compile(r"_\d{8}T\d{4}_\d{8}T\d{4}\.xml$")
 
 # Reject missing/unknown resolutions instead of silently shifting observation times.
 _RESOLUTION_RE = re.compile(r"PT(\d+)M")
+logger = logging.getLogger(__name__)
+
+
+def _unavailable_entsoe_document(content: bytes, doc_kind: str) -> bool:
+    """Recognize explicit publication gaps; required-source freshness is checked later."""
+    items = {"day_ahead_price": "ENERGY_PRICES",
+             "load": "ACTUAL_TOTAL_LOAD_R3",
+             "generation": "AGGREGATED_GENERATION_PER_TYPE_R3"}
+    if doc_kind not in items:
+        return False
+    root = ET.fromstring(content)
+    if root.tag.split("}")[-1] != "Acknowledgement_MarketDocument":
+        return False
+    reasons = [node for node in root.iter() if node.tag.split("}")[-1] == "Reason"]
+    if not reasons:
+        return False
+    for reason in reasons:
+        fields = {child.tag.split("}")[-1]: (child.text or "").strip() for child in reason}
+        if fields.get("code") != "999" or not fields.get("text", "").startswith(
+            "No matching data found for Data item " + items[doc_kind]
+        ):
+            return False
+    return True
 
 
 def _resolution_to_minutes(resolution: str | None) -> int:
@@ -186,6 +210,11 @@ def load_blob(conn, container_client, container, blob):
         kind = _DOC_KIND_SUFFIX_RE.sub("", blob.name.split("/")[-1])
         if kind not in ("load", "generation", "day_ahead_price"):
             raise ValueError(f"Unexpected ENTSO-E object: {blob.name}")
+        if _unavailable_entsoe_document(content, kind):
+            # Keep previous valid rows and their receipt. A later valid Blob version
+            # will be loaded normally. Required load/generation must still pass freshness.
+            logger.warning("ENTSO-E publication unavailable for %s; preserving existing rows and receipt; required-source freshness remains enforced", blob.name)
+            return False
         df = _parse_entsoe_xml(content, kind, zone)
     else:
         df = _parse_openmeteo_json(content, zone)
