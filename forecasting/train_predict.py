@@ -62,15 +62,16 @@ def _ensure_forecasts_table(engine):
     migrate(engine)
 
 
-def main(interval_end: str | None = None) -> None:
+def main(interval_end: str | None = None, zone: str | None = None) -> None:
     engine = _engine()
     _ensure_forecasts_table(engine)
 
     with engine.connect() as conn:
         end = datetime.fromisoformat(interval_end) if interval_end else datetime.now(timezone.utc)
         result = conn.execute(text("""select * from marts.fct_demand_weather
-            where ts < :end and ts >= :end - make_interval(days => :days)"""),
-            {"end": end, "days": int(os.getenv("TRAINING_DAYS", "90"))})
+            where ts < :end and ts >= :end - make_interval(days => :days)
+              and (cast(:zone as text) is null or zone = :zone)"""),
+            {"end": end, "zone": zone, "days": int(os.getenv("TRAINING_DAYS", "90"))})
         df = pd.DataFrame(result.fetchall(), columns=list(result.keys()))
     if not df.empty:
         df["ts"] = pd.to_datetime(df["ts"], utc=True)

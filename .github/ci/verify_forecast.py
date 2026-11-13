@@ -3,7 +3,7 @@ import subprocess
 from sqlalchemy import text
 from platform_common.database import warehouse_engine
 from forecasting.train_predict import main
-from ingestion.quality import check_freshness
+from ingestion.quality import StaleSourceError, check_freshness
 
 engine = warehouse_engine()
 with engine.begin() as conn:
@@ -47,6 +47,23 @@ except ValueError:
 else:
     raise AssertionError("Old events with recent loaded_at must fail freshness")
 subprocess.run(["dbt", "build", "--project-dir", "/tmp/dbt-ci", "--profiles-dir", "/tmp/dbt-ci"], check=True)
+with engine.begin() as conn:
+    conn.execute(text("""DELETE FROM raw.entsoe_raw WHERE zone='ES' AND doc_kind='load'
+                         AND period_start >= '2026-02-07'::timestamptz"""))
+for zone in ("FR", "DE"):
+    check_freshness("2026-02-08T00:00:00+00:00", zones=(zone,))
+    main(interval_end="2026-02-08T00:00:00+00:00", zone=zone)
+try:
+    check_freshness("2026-02-08T00:00:00+00:00", zones=("ES",))
+except StaleSourceError:
+    pass
+else:
+    raise AssertionError("Spain's stale load must block its forecast")
+with engine.connect() as conn:
+    zones = conn.execute(text("SELECT DISTINCT zone FROM public.forecasts")).scalars().all()
+    assert set(zones) == {"FR", "DE"}, zones
+
+# The unfiltered entry point remains available for existing callers.
 for _ in range(2):
     main(interval_end="2026-02-08T00:00:00+00:00")
 with engine.connect() as conn:

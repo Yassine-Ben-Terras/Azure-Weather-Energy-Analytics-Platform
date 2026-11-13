@@ -58,10 +58,9 @@ receipt. The following freshness task still rejects missing or stale load/genera
 Missing or stale day-ahead prices produce a freshness warning instead of blocking
 the demand, wind and solar forecasts; required-source freshness remains enforced.
 
-Freshness currently gates the entire DAG: stale required observations in one country
-block transformations and forecasts for all three countries. Per-country isolation
-is a planned improvement, not implemented behavior. A successful ingestion task
-does not guarantee fresh observations or a populated forecast table.
+Freshness gates forecasts independently for each country. A stale required source
+skips that country's forecast and logs a warning. The next hourly run checks again.
+Shared dbt models retain historical observations for reporting.
 
 ## Forecast scope
 
