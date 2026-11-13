@@ -25,7 +25,7 @@ def zone_is_fresh(interval_end, zone):
 
 with DAG(
     "energy_weather", schedule="@hourly", start_date=datetime(2024, 1, 1),
-    catchup=False, max_active_runs=1, max_active_tasks=3,
+    catchup=False, max_active_runs=1, max_active_tasks=9,
     dagrun_timeout=timedelta(hours=2),
     default_args={"owner": "energy-weather", "retries": 3,
                   "retry_delay": timedelta(minutes=5), "execution_timeout": timedelta(minutes=45),

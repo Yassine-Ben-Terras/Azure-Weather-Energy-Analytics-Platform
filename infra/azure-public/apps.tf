@@ -15,7 +15,7 @@ locals {
     AIRFLOW_DB_USER                                          = "airflow"
     AIRFLOW_DB_SSLMODE                                       = "verify-full"
     AIRFLOW__CORE__EXECUTOR                                  = "LocalExecutor"
-    AIRFLOW__CORE__PARALLELISM                               = "1"
+    AIRFLOW__CORE__PARALLELISM                               = "9"
     AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE                 = "2"
     AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW              = "2"
     AIRFLOW__WEBSERVER__WORKERS                              = "1"
