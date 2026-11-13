@@ -50,3 +50,4 @@ exports/
 crash.log
 
 release-record.json
+**/*.tfvars.json

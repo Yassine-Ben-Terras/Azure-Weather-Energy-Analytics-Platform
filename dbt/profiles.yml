@@ -9,6 +9,6 @@ energy_weather:
       password: "{{ env_var('WAREHOUSE_PASSWORD') }}"
       dbname: "{{ env_var('WAREHOUSE_DB') }}"
       schema: public
-      threads: 4
+      threads: "{{ env_var('DBT_THREADS', '4') | as_number }}"
       sslmode: "{{ env_var('WAREHOUSE_SSLMODE', 'verify-full') }}"
       sslrootcert: "{{ env_var('WAREHOUSE_SSLROOTCERT', '/etc/ssl/certs/ca-certificates.crt') }}"

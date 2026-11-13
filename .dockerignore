@@ -28,3 +28,4 @@ metabase-data
 *.pem
 *.key
 crash.log
+**/*.tfvars.json

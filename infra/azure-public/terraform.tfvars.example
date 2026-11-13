@@ -1,0 +1,13 @@
+subscription_id = "REPLACE_WITH_NEW_SUBSCRIPTION_ID"
+project_prefix = "wepub"
+location = "switzerlandnorth"
+environment = "dev"
+stage = "foundation"
+postgres_sku_name = "B_Standard_B1ms"
+postgres_storage_mb = 32768
+postgres_zone = null
+operator_ipv4_addresses = [] # Set your exact public IPv4 before deploying.
+runtime_ipv4_addresses = [] # Populate verified ACA egress before bootstrap/apps.
+airflow_admin_email = "you@example.com"
+alert_email = "you@example.com"
+# Supply entsoe_api_token via TF_VAR_entsoe_api_token; never commit its value.

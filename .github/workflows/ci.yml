@@ -34,3 +34,8 @@ jobs:
       - run: terraform -chdir=infra/azure init -backend=false -lockfile=readonly
       - run: terraform -chdir=infra/azure validate
       - run: terraform -chdir=infra/azure test
+      - name: Validate public access deployment
+        run: |
+          terraform fmt -check infra/azure-public
+          terraform -chdir=infra/azure-public init -backend=false -lockfile=readonly
+          terraform -chdir=infra/azure-public validate
