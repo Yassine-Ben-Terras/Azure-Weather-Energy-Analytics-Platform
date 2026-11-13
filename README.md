@@ -62,7 +62,7 @@ Freshness gates forecasts independently for each country. A stale required sourc
 skips that country's forecast and logs a warning. The next hourly run checks again.
 Shared dbt models retain historical observations for reporting.
 
-The [zone configuration](platform_common/zones.json) defines the ten areas used by
+The [zone configuration](platform_common/zones.json) defines the areas used by
 Airflow, freshness checks and monitoring. To add an area, specify its output code,
 ENTSO-E area EIC and one representative Open-Meteo point, then rebuild the Airflow
 image. `DE` retains the existing Germany–Luxembourg bidding zone. Verify source

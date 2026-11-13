@@ -36,7 +36,8 @@ with DAG(
     ingestions = []
     for label, zone in ZONES.items():
         ingestions.append(PythonOperator(task_id=f"entsoe_{label}", python_callable=entsoe,
-            op_kwargs={"zone_eic": zone["entsoe_eic"], "zone_label": label, "interval_end": end}))
+            op_kwargs={"zone_eic": zone["entsoe_eic"], "zone_label": label, "interval_end": end,
+                       "fetch_day_ahead_price": zone.get("fetch_day_ahead_price", True)}))
         ingestions.append(PythonOperator(task_id=f"weather_{label}", python_callable=weather,
             op_kwargs={"lat": zone["latitude"], "lon": zone["longitude"], "zone_label": label, "interval_end": end}))
     loader = PythonOperator(task_id="load", python_callable=load, trigger_rule="all_done")

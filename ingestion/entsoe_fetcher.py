@@ -61,7 +61,8 @@ def fetch_window(token: str, doc_config: dict, zone_eic: str, period_start: date
     return resp.content  # raw XML from ENTSO-E
 
 
-def run(zone_eic: str, zone_label: str, interval_end: str | None = None) -> None:
+def run(zone_eic: str, zone_label: str, interval_end: str | None = None,
+        fetch_day_ahead_price: bool = True) -> None:
     token = os.environ["ENTSOE_API_TOKEN"]
     container = os.environ["AZURE_STORAGE_CONTAINER"]
     client = get_client()
@@ -80,6 +81,8 @@ def run(zone_eic: str, zone_label: str, interval_end: str | None = None) -> None
     while day < period_end:
         next_day = day + timedelta(days=1)
         for name, doc_config in DOC_TYPES.items():
+            if name == "day_ahead_price" and not fetch_day_ahead_price:
+                continue
             content = fetch_window(token, doc_config, zone_eic, day, min(next_day, period_end))
             object_name = f"{SOURCE_NAME}/{zone_label}/{day:%Y-%m-%d}/{name}_{day:%Y%m%dT%H%M}_{next_day:%Y%m%dT%H%M}.xml"
             client.get_container_client(container).upload_blob(name=object_name, data=content, overwrite=True)

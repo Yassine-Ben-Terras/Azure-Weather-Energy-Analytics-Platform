@@ -1,33 +1,107 @@
 {
-  "FR": {
-    "entsoe_eic": "10YFR-RTE------C",
-    "latitude": 48.8566,
-    "longitude": 2.3522
-  },
-  "DE": {
-    "entsoe_eic": "10Y1001A1001A82H",
-    "latitude": 51.1657,
-    "longitude": 10.4515
-  },
-  "ES": {
-    "entsoe_eic": "10YES-REE------0",
-    "latitude": 40.4168,
-    "longitude": -3.7038
-  },
-  "NL": {
-    "entsoe_eic": "10YNL----------L",
-    "latitude": 52.3676,
-    "longitude": 4.9041
+  "AT": {
+    "entsoe_eic": "10YAT-APG------L",
+    "latitude": 48.2082,
+    "longitude": 16.3738
   },
   "BE": {
     "entsoe_eic": "10YBE----------2",
     "latitude": 50.8503,
     "longitude": 4.3517
   },
-  "AT": {
-    "entsoe_eic": "10YAT-APG------L",
-    "latitude": 48.2082,
-    "longitude": 16.3738
+  "BG": {
+    "entsoe_eic": "10YCA-BULGARIA-R",
+    "latitude": 42.6977,
+    "longitude": 23.3219
+  },
+  "CH": {
+    "entsoe_eic": "10YCH-SWISSGRIDZ",
+    "latitude": 46.948,
+    "longitude": 7.4474
+  },
+  "CZ": {
+    "entsoe_eic": "10YCZ-CEPS-----N",
+    "latitude": 50.0755,
+    "longitude": 14.4378
+  },
+  "DE": {
+    "entsoe_eic": "10Y1001A1001A82H",
+    "latitude": 51.1657,
+    "longitude": 10.4515
+  },
+  "EE": {
+    "entsoe_eic": "10Y1001A1001A39I",
+    "latitude": 59.437,
+    "longitude": 24.7536
+  },
+  "ES": {
+    "entsoe_eic": "10YES-REE------0",
+    "latitude": 40.4168,
+    "longitude": -3.7038
+  },
+  "FI": {
+    "entsoe_eic": "10YFI-1--------U",
+    "latitude": 60.1699,
+    "longitude": 24.9384
+  },
+  "FR": {
+    "entsoe_eic": "10YFR-RTE------C",
+    "latitude": 48.8566,
+    "longitude": 2.3522
+  },
+  "GR": {
+    "entsoe_eic": "10YGR-HTSO-----Y",
+    "latitude": 37.9838,
+    "longitude": 23.7275
+  },
+  "HU": {
+    "entsoe_eic": "10YHU-MAVIR----U",
+    "latitude": 47.4979,
+    "longitude": 19.0402
+  },
+  "IE": {
+    "entsoe_eic": "10YIE-1001A00010",
+    "fetch_day_ahead_price": false,
+    "latitude": 53.3498,
+    "longitude": -6.2603
+  },
+  "IT": {
+    "entsoe_eic": "10YIT-GRTN-----B",
+    "fetch_day_ahead_price": false,
+    "latitude": 41.9028,
+    "longitude": 12.4964
+  },
+  "LT": {
+    "entsoe_eic": "10YLT-1001A0008Q",
+    "latitude": 54.6872,
+    "longitude": 25.2797
+  },
+  "LU": {
+    "entsoe_eic": "10YLU-CEGEDEL-NQ",
+    "fetch_day_ahead_price": false,
+    "latitude": 49.6116,
+    "longitude": 6.1319
+  },
+  "LV": {
+    "entsoe_eic": "10YLV-1001A00074",
+    "latitude": 56.9496,
+    "longitude": 24.1052
+  },
+  "MK": {
+    "entsoe_eic": "10YMK-MEPSO----8",
+    "latitude": 41.9981,
+    "longitude": 21.4254
+  },
+  "NL": {
+    "entsoe_eic": "10YNL----------L",
+    "latitude": 52.3676,
+    "longitude": 4.9041
+  },
+  "NO": {
+    "entsoe_eic": "10YNO-0--------C",
+    "fetch_day_ahead_price": false,
+    "latitude": 59.9139,
+    "longitude": 10.7522
   },
   "PL": {
     "entsoe_eic": "10YPL-AREA-----S",
@@ -39,14 +113,25 @@
     "latitude": 38.7223,
     "longitude": -9.1393
   },
-  "CH": {
-    "entsoe_eic": "10YCH-SWISSGRIDZ",
-    "latitude": 46.948,
-    "longitude": 7.4474
+  "RO": {
+    "entsoe_eic": "10YRO-TEL------P",
+    "latitude": 44.4268,
+    "longitude": 26.1025
   },
-  "CZ": {
-    "entsoe_eic": "10YCZ-CEPS-----N",
-    "latitude": 50.0755,
-    "longitude": 14.4378
+  "SE": {
+    "entsoe_eic": "10YSE-1--------K",
+    "fetch_day_ahead_price": false,
+    "latitude": 59.3293,
+    "longitude": 18.0686
+  },
+  "SI": {
+    "entsoe_eic": "10YSI-ELES-----O",
+    "latitude": 46.0569,
+    "longitude": 14.5058
+  },
+  "SK": {
+    "entsoe_eic": "10YSK-SEPS-----K",
+    "latitude": 48.1486,
+    "longitude": 17.1077
   }
 }
